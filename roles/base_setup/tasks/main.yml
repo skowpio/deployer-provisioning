@@ -74,13 +74,4 @@
     mode: 0644
   become: true
 
-- name: 'Fix for https://bugzilla.redhat.com/show_bug.cgi?id=1395778'
-  copy: 
-    src: file_contexts.local 
-    dest: /etc/selinux/targeted/contexts/files/file_contexts.local
-    owner: root
-    group: root
-    mode: 0644
-  become: true 
-
 
