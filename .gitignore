@@ -1,0 +1,3 @@
+*retry
+roles/deploy_putit_apps/files/ssh_prv_keys/*
+roles/deploy_putit_apps/files/ssh_prv_keys/.*
