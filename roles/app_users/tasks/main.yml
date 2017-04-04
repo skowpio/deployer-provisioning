@@ -1,0 +1,16 @@
+# vim:ft=ansible:
+---
+- set_fact: os_date="{{lookup('pipe','date +%Y%m%d%H%M%S')}}"
+ 
+# it looks heavy but thanks that we can add/remove ssh_keys from group_vers/users.yml and authorized_keys will be updated. Deafult ansible module authorized_keys doesn't allow for that - just adding. 
+- include: ssh_keys.yml 
+
+# pickup java version from group_vars per user. Check if its exist on /opt/java/jdk{{java_version}} if not fetched it from oracle
+#- include: java.yml
+
+# set custom or deafult bash_profile. In both case if user has defined java_version or mudpdf_version proper entries would be added to his .bash_profile
+- include: bash_profile.yml
+  with_items: "{{ ssh_users }}"
+  loop_control:
+    loop_var: ssh_users_bash_profile
+

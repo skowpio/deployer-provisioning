@@ -1,0 +1,48 @@
+- name: Fetch ruby from github release 
+  get_url:
+    url: "https://github.com/feedforce/ruby-rpm/releases/download/{{ ruby_version }}/ruby-{{ ruby_version }}-1.el7.centos.x86_64.rpm"
+    dest: /tmp
+    mode: 0640 
+  become: true
+
+- name: Install local ruby rpm 
+  yum:
+    name: "/tmp/ruby-{{ ruby_version }}-1.el7.centos.x86_64.rpm"
+    state: present
+  become: true
+
+- name: Upload .gemrc
+  copy: 
+    src: 'files/.gemrc'
+    dest: "/home/{{ deployer_app_user }}/.gemrc"
+    mode: 0644 
+    owner: "{{ deployer_app_user }}"
+    group: "{{ deployer_app_group }}"
+    
+- name: Gem update system
+  shell: 'gem update --system'
+  become: true
+  become_user: "{{ deployer_app_user }}"
+
+- name: Gem install global gems
+  gem: 
+    name: "{{ item.name }}"
+    version: "{{ item.version }}"
+    state: present
+  with_items: "{{ deployer_global_gems }}" 
+  become: true
+  become_user: "{{ deployer_app_user }}"
+
+#- name: Install putit-core gems
+#  shell:  bundle exec gem install
+#  args: 
+#    chdir: "{{ putit_core_service_dir }}"
+#  become: yes
+#  become_user: "{{ deployer_app_user }}"
+
+#- name: Install  putit-auth gems
+#  shell:  bundle exec gem install
+#  args: 
+#    chdir: "{{ putit_auth_service_dir }}"
+#  become: yes
+#  become_user: "{{ deployer_app_user }}"

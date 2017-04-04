@@ -1,0 +1,13 @@
+---
+ssh_users:
+    - name: 'depapp'
+      group: 'depapp' 
+      groups: 'adm,wheel'
+      #user_java_version: '1.8.0_112'
+      #mupdf_version: '1.8'
+      ssh_keys:
+        - ssh_keys/tomek_rsa.pub
+        - ssh_keys/tomek2_rsa.pub
+        - ssh_keys/mateusz_proddata_rsa.pub  
+        - ssh_keys/depapp_rsa.pub 
+

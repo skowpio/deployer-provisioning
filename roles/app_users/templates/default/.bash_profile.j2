@@ -1,0 +1,22 @@
+# {{ ansible_managed }}
+# default one
+
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+    . ~/.bashrc
+fi
+export GEM_HOME="$HOME/.gem/ruby/{{ ruby_major_version }}.0"
+
+# User specific environment and startup programs
+{% if ssh_users_bash_profile.user_java_version is defined %} 
+export JAVA_HOME="/opt/java/jdk{{ssh_users_bash_profile.user_java_version}}"
+{% endif %}
+
+{% if user_extra_path %} 
+PATH=$PATH:$HOME/.local/bin:$HOME/bin{{user_extra_path}}
+{% else %}
+PATH=$PATH:$HOME/.local/bin:$HOME/.gem/ruby/{{ ruby_major_version }}.0/bin/:$HOME/bin:/usr/pgsql-9.5/bin
+{% endif %}
+export PATH

@@ -1,0 +1,24 @@
+[Unit]
+Requires=network.target
+
+[Service]
+Type=simple
+User=depapp
+WorkingDirectory=/vagrant/deployer-services/services/playbook
+Environment=PORT=%i
+Environment=RACK_ENV=development
+Environment='STDOUT=/vagrant/deployer-services/%p.out'
+Environment='STDERR=/vagrant/deployer-services/%p.out'
+ExecStart=/bin/sh -c '/bin/bundle exec thin start --port 9292 --log ${STDOUT}'
+#ExecStart=/vagrant/deployer-services/scripts/putit-core.sh
+ExecStop='/bin/ps uax | grep thin | grep -v grep | awk '{print $2}' | xargs /bin/kill'
+Restart=no
+StandardInput=null
+#StandardOutput=syslog
+#StandardError=syslog
+#SyslogIdentifier=%p
+KillMode=mixed
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target

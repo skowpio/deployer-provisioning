@@ -1,0 +1,103 @@
+# vim:ft=ansible:
+---
+  - name: Create temp dir
+    file: path=/tmp/.ansible_work state=directory mode=0755
+
+  - name: Set ansible_work var
+    set_fact: 
+      ansible_work_dir: '/tmp/.ansible_work'
+
+  - name: Create temp dir per user 
+    file: path={{ ansible_work_dir  }}/{{ item.name }} state=directory mode=0700
+    with_items:
+      - "{{ ssh_users }}"
+
+  - name: Create main user group
+    group: name={{ item.group }} state=present
+    with_items:
+        - "{{ ssh_users }}"
+    when: "{{ item.group | trim != '' }}"
+    become: true
+
+  - name: Adding users - with single group
+    user: user={{ item.name }} createhome=yes groups={{ item.groups }} group={{ item.group }}
+    with_items:
+        - "{{ ssh_users }}"
+    when: "{{ item.groups | trim == ''}}"
+    become: true
+
+  - name: Adding users - with extra groups
+    user: user={{ item.name }} createhome=yes groups={{ item.groups }} group={{ item.group }}
+    with_items:
+        - "{{ ssh_users }}"
+    become: true
+    when: "{{ item.groups | trim != ''}}"
+
+  - name: Make sure that .ssh exist 
+    file: path=/home/{{ item.name }}/.ssh state=directory mode=0700 owner={{ item.name }} group={{ item.group }}
+    with_items:
+      - "{{ ssh_users }}" 
+    become: true
+
+  # check if ansible role contains bash_profile file for that user, if yes apply it if not use deafult 
+#  - name: Check if user have dedicated .bash_profile 
+#    local_action: stat path="{{ role_path }}/templates/{{ item.name }}/.bash_profile.j2"
+#    with_items:
+#      - "{{ ssh_users }}"
+#    register: user_bash_profile 
+#    become: false
+
+  # make sure than no other 3rd party software mess with .bash_profile.
+  # for example nvm use .bashrc so its fine
+#  - name: Set proper .bash_profile 
+#    template: src=templates/{{ item.item.name }}/.bash_profile.j2 dest=/home/{{ item.item.name }}/.bash_profile owner={{ item.item.name }} group={{ item.item.group }} mode=644 backup=no
+#    with_items:
+#        - "{{ user_bash_profile.results }}"
+#    become: true
+#    when: item.stat.exists
+  
+  - name: Adding ssh_key to temp file  
+    authorized_key: "user={{ item.0.name }} key='{{ lookup('file', item.1) }}' path={{ ansible_work_dir }}/{{ item.0.name }}/authorized_keys"
+    with_subelements:
+       - "{{ ssh_users }}"
+       - ssh_keys
+    become: true
+
+  - name: Check if authorized_key exisit 
+    stat: path=/home/{{ item.name }}/.ssh/authorized_keys
+    with_items:
+        - "{{ ssh_users }}"
+    become: true
+    register: authorized_keys_check
+
+  # iterating only across authorized_keys_check.results to backups files that exists
+  - name: Backuping authorized_key 
+    shell: cp  /home/{{ item.item.name }}/.ssh/authorized_keys /home/{{ item.item.name }}/.ssh/authorized_keys_{{os_date}}
+    with_items:
+        - "{{ authorized_keys_check.results }}"
+    become: true
+    when: item.stat.exists 
+
+  - name: Copying current temp authorized_key to user home
+    shell: cp {{ ansible_work_dir }}/{{ item.name }}/authorized_keys /home/{{ item.name }}/.ssh/authorized_keys
+    with_items:
+        - "{{ ssh_users }}"
+    become: true
+  
+  - name: Setting perms
+    file: path=/home/{{ item.name }}/.ssh/authorized_keys mode=0600 group={{ item.group }} owner={{ item.name }} 
+    with_items:
+        - "{{ ssh_users }}"
+    become: true
+
+  - name: Cleaning temp files
+    file: path={{ ansible_work_dir }}/{{ item.name }}/authorized_keys state=absent
+    with_items:
+       - "{{ ssh_users }}"
+    become: true
+  
+  - name: Cleaning temp dir
+    file: path={{ ansible_work_dir }}/{{ item.name }} state=absent
+    with_items:
+       - "{{ ssh_users }}"
+    become: true

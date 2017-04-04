@@ -1,0 +1,22 @@
+# vim:ft=ansible:
+---
+# fetch all java versions defined per user and make a list from them 
+- name: "Register all java version used by users on that server group"
+  set_fact: java_list="{{ item }}"
+  with_items: "{{ssh_users|json_query('[*].user_java_version')}}"
+  register: java_list_result
+
+- name: "Make list of java versions used by users"
+  set_fact: user_java_list="{{ java_list_result.results | map(attribute='ansible_facts.java_list') | list }}"
+
+- name: "Display java versions"
+  debug: var=user_java_list
+
+# install all java in al versions collected above
+- include: roles/java/tasks/main.yml 
+  with_items: "{{ user_java_list }}"
+  loop_control:
+    loop_var: user_java
+  when: user_java_list is defined
+
+

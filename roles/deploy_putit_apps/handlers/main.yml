@@ -1,0 +1,35 @@
+- name: reload systemd units
+  shell: systemctl daemon-reload 
+  become: true
+
+- name: start putit-auth 
+  shell: systemctl start putit-auth
+  become: true
+
+- name: stop putit-auth 
+  shell: systemctl stop putit-auth
+  become: true
+
+- name: restart putit-auth 
+  debug: msg="Restarting putit-auth"
+  changed_when: True
+  notify:
+    - stop putit-auth 
+    - start putit-auth 
+  become: true
+
+- name: start putit-core
+  shell: systemctl start putit-core
+  become: true
+
+- name: stop putit-core
+  shell: systemctl stop putit-core
+  become: true
+
+- name: restart putit-core
+  debug: msg="Restarting putit-core"
+  changed_when: True
+  notify:
+    - stop putit-core
+    - start putit-core
+  become: true

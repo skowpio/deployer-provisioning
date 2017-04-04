@@ -1,0 +1,9 @@
+---
+
+yum: 
+  config: 
+    file: /etc/yum.conf  
+  main:  
+    installonlypkgs: 'mupdf'
+
+

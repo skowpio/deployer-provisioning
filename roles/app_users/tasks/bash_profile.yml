@@ -1,0 +1,42 @@
+- name: Set empty USER_PATH env 
+  set_fact: 
+    user_extra_path_list: []
+
+- name: Set extra PATH entires for that user
+  set_fact: 
+    user_extra_path_list: "{{ user_extra_path_list }} + [ ':/opt/java/jdk{{ssh_users_bash_profile.user_java_version}}/bin' ]"
+  when: ssh_users_bash_profile.user_java_version is defined
+
+- name: Set extra PATH entires for that user
+  set_fact: 
+    user_extra_path_list: "{{ user_extra_path_list }} + [ ':/opt/mupdf/{{ssh_users_bash_profile.mupdf_version}}/bin' ]" 
+  when: ssh_users_bash_profile.mupdf_version is defined
+
+- name: Conver list to string
+  set_fact: 
+    user_extra_path: "{{ user_extra_path_list|join('') }}"
+
+- name: Copy .bash_profile   
+  template: "src={{ item }} dest=/home/{{ ssh_users_bash_profile.name }}/.bash_profile owner={{ ssh_users_bash_profile.name }} group={{ ssh_users_bash_profile.group }} mode=644 backup=no"
+  with_first_found:
+    - files: 
+      - "{{ ssh_users_bash_profile.name }}/.bash_profile.j2"
+      - default/.bash_profile.j2  
+
+  # check if ansible role contains bash_profile file for that user, if yes apply it if not use deafult 
+#  - name: Check if user have dedicated .bash_profile
+#    local_action: stat path="{{ role_path }}/templates/{{ item.name }}/.bash_profile.j2"
+#    with_items:
+#      - "{{ ssh_users }}"
+#    register: user_bash_profile
+#    become: false
+
+  # make sure than no other 3rd party software mess with .bash_profile.
+  # for example nvm use .bashrc so its fine
+#  - name: Set proper .bash_profile
+#    template: src=templates/{{ item.item.name }}/.bash_profile.j2 dest=/home/{{ item.item.name }}/.bash_profile owner={{ item.item.name }} group={{ item.item.group }} mode=644 backup=no
+#    with_items:
+#        - "{{ user_bash_profile.results }}"
+#    become: true
+#    when: item.stat.exists
+
