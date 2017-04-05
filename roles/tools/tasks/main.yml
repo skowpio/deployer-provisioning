@@ -62,11 +62,22 @@
   shell: "ls /usr/pgsql-{{ postgresql_major_version }}/bin"
   register: registered_postgresql_tools
 
-- name: Link postgresql bin - ansible path limitation
+
+
+- name: Link postgresql pg_config - ansible path limitation
   file: 
-    src:  "/usr/pgsql-{{ postgresql_major_version }}/bin/{{item}}"
-    dest: "/usr/local/bin/{{item}}"
+    src:  "/usr/pgsql-{{ postgresql_major_version }}/bin/pg_config"
+    dest: "/bin/pg_config"
     owner: root
     group: root
     state: link
-  with_items: "{{ registered_postgresql_tools.stdout.splitlines()}}"
+
+
+#- name: Link postgresql bin - ansible path limitation
+#  file: 
+#    src:  "/usr/pgsql-{{ postgresql_major_version }}/bin/{{item}}"
+#    dest: "/usr/local/bin/{{item}}"
+#    owner: root
+#    group: root
+#    state: link
+#  with_items: "{{ registered_postgresql_tools.stdout.splitlines()}}"
