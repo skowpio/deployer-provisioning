@@ -31,7 +31,14 @@ Above its just example. Port or host could be different but please keep: dev-dep
 
 6. Clone this repository 
 
-7. Run playbook
+7. Ask for private key to access private repos
+Save the key under path: 
+
+```
+files/ssh_prv_keys/depapp_rsa.prv
+```
+
+8. Run playbook
 ```
 ansible-playbook -i inventory-dev-deployer dev-deployer.yml  -b -v
 ```
