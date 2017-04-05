@@ -35,14 +35,14 @@
   become: true
 
 # keep each mupdf custom rpm version 
-- name: Update /etc/yum.conf 
-  ini_file: dest={{yum.config.file}}
-            section={{item.section}}
-            option={{item.option}}
-            value={{item.value}}
-  with_items:
-      - { section: main, option: installonlypkgs, value: "{{ yum.main.installonlypkgs }}" }
-  when: yum.main.installonlypkgs is defined 
+#- name: Update /etc/yum.conf 
+#  ini_file: dest={{yum.config.file}}
+#            section={{item.section}}
+#            option={{item.option}}
+#            value={{item.value}}
+#  with_items:
+#      - { section: main, option: installonlypkgs, value: "{{ yum.main.installonlypkgs }}" }
+#  when: yum.main.installonlypkgs is defined 
 
 - name: Install basic packages 
   yum: state=present name="{{ item }}"
