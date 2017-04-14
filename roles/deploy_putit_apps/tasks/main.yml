@@ -117,3 +117,12 @@
     - bundle
   become: true
 
+- name: Create source dir for REST tests
+  file:  
+    dest: "{{ putit_artifacts_source_dir }}"
+    mode: 0755
+    owner: "{{ deployer_app_user }}"
+    group: "{{ deployer_app_group }}"
+    state: directory
+  become: true
+
