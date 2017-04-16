@@ -25,8 +25,14 @@
   with_items: 
     - clone_auth.sh     
     - clone_deployer.sh
-    - runRESTTests.sh
   become: true
+
+- name: Create symlink for runRESTTests.sh 
+  file: 
+    src: "{{ putit_core_deploy_dir }}/rest_tests/runRESTTests.sh"
+    dest: '/usr/local/bin/runRESTTests.sh'
+    state: link
+  become: true 
 
 - name: Upload private key for depapp user
   copy: 
