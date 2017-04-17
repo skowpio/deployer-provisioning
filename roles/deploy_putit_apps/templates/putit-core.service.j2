@@ -9,9 +9,10 @@ Environment=PORT=%i
 Environment=RACK_ENV=development
 Environment='STDOUT=/vagrant/deployer-services/%p.out'
 Environment='STDERR=/vagrant/deployer-services/%p.out'
+EnvironmentFile=/home/{{ deployer_app_user }}/{{ putit_core_systemd_environment_file }}
 ExecStart=/bin/sh -c '/bin/bundle exec thin start --port 9292 --log ${STDOUT}'
 #ExecStart=/vagrant/deployer-services/scripts/putit-core.sh
-ExecStop='/bin/ps uax | grep thin | grep -v grep | awk '{print $2}' | xargs /bin/kill'
+ExecStop=/bin/sh -c '/bin/bundle exec thin stop --port 9292 --log ${STDOUT}'
 Restart=no
 StandardInput=null
 #StandardOutput=syslog

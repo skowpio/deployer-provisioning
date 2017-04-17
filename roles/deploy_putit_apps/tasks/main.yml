@@ -1,4 +1,18 @@
 ---
+- name: Register app PATH var
+  shell: "egrep '[P]ATH=' /home/{{ deployer_app_user }}/.bash_profile | cut -d '=' -f2 | sed 's,$HOME,~,'g | sed -e 's,$PATH,{{ ansible_env.PATH }},'"
+  #shell: "egrep '[P]ATH=' /home/{{ deployer_app_user }}/.bash_profile | cut -d '=' -f2"
+  #shell: "export | egrep '[P]ATH'  | cut -d '\"' -f2"
+  #shell: "echo $PATH"
+  register: deployer_app_user_path_registered
+  become: true
+  become_user: "{{ deployer_app_user }}"
+  changed_when: false
+
+- name: Set PATH fact
+  set_fact:
+    deployer_app_user_path: "{{ deployer_app_user_path_registered.stdout }}"
+
 - name: Create app dir for core 
   file: 
     dest: "{{ putit_core_deploy_dir }}"
@@ -42,10 +56,16 @@
     group: "{{ deployer_app_group }}"
     mode: 0600
 
+- name: Upload EnvironmentFile
+  template: 
+    src: "templates/{{ putit_core_systemd_environment_file }}.j2"
+    dest: "/home/{{ deployer_app_user }}/{{ putit_core_systemd_environment_file }}"
+    owner: "{{ deployer_app_user }}"
+    group: "{{ deployer_app_group }}"
     
 - name: Upload system service for putit-core
-  copy:
-    src: files/putit-core.service
+  template:
+    src: templates/putit-core.service.j2
     dest: /usr/lib/systemd/system/putit-core.service
     owner: root
     group: root
