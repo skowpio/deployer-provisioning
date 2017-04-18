@@ -17,6 +17,6 @@ export JAVA_HOME="/opt/java/jdk{{ssh_users_bash_profile.user_java_version}}"
 {% if user_extra_path %} 
 PATH=$PATH:$HOME/.local/bin:$HOME/bin{{user_extra_path}}
 {% else %}
-PATH=$PATH:$HOME/.local/bin:$HOME/.gem/ruby/{{ ruby_major_version }}.0/bin/:$HOME/bin:/usr/pgsql-9.5/bin
+PATH=$PATH:$HOME/.local/bin:$HOME/.gem/ruby/{{ ruby_major_version }}.0/bin/:$HOME/bin:/usr/pgsql-9.5/bin:{{ putit_cli_dir }}
 {% endif %}
 export PATH
