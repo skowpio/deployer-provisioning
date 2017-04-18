@@ -2,17 +2,17 @@
 Requires=network.target
 
 [Service]
-Type=simple
+Type=forking
 User=depapp
-WorkingDirectory=/vagrant/deployer-services/services/playbook
+WorkingDirectory={{ putit_core_service_dir }}
 Environment=PORT=%i
 Environment=RACK_ENV=development
-Environment='STDOUT=/vagrant/deployer-services/%p.out'
-Environment='STDERR=/vagrant/deployer-services/%p.out'
+Environment='STDOUT={{ putit_core_deploy_dir }}/%p.stdout'
+Environment='STDERR={{ putit_core_deploy_dir }}/%p.stderr'
 EnvironmentFile=/home/{{ deployer_app_user }}/{{ putit_core_systemd_environment_file }}
-ExecStart=/bin/sh -c '/bin/bundle exec thin start --port 9292 --log ${STDOUT}'
-#ExecStart=/vagrant/deployer-services/scripts/putit-core.sh
-ExecStop=/bin/sh -c '/bin/bundle exec thin stop --port 9292 --log ${STDOUT}'
+#PIDFile={{ putit_core_service_dir }}/pids/thin-devel.pid
+ExecStart=/bin/bash -lc '/bin/bundle exec thin -C {{ putit_core_thin_config_path }}  start'
+ExecStop=/bin/sh -lc '/bin/bundle exec thin -C {{ putit_core_thin_config_path }} stop'
 Restart=no
 StandardInput=null
 #StandardOutput=syslog

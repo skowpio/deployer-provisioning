@@ -41,13 +41,6 @@
     - clone_deployer.sh
   become: true
 
-- name: Create symlink for runRESTTests.sh 
-  file: 
-    src: "{{ putit_core_deploy_dir }}/rest_tests/runRESTTests.sh"
-    dest: '/usr/local/bin/runRESTTests.sh'
-    state: link
-  become: true 
-
 - name: Upload private key for depapp user
   copy: 
     src: files/ssh_prv_keys/depapp_rsa.prv
@@ -72,7 +65,7 @@
     mode: 0755
   notify:
     - reload systemd units
-    
+
 - name: Upload system service for putit-auth
   copy:
     src: files/putit-auth.service
@@ -104,6 +97,20 @@
     force: yes
     version: "{{ putit_auth_deploy_branch }}"
     accept_hostkey: true
+  become: true
+  become_user: "{{ deployer_app_user }}"
+
+- name: Create symlink for runRESTTests.sh 
+  file: 
+    src: "{{ putit_core_deploy_dir }}/rest_tests/runRESTTests.sh"
+    dest: '/usr/local/bin/runRESTTests.sh'
+    state: link
+  become: true 
+
+- name: Configure bundle 
+  shell: "~/.gem/ruby/{{ ruby_major_version}}.0/bin/bundle config build.pg --with-pg-config=/usr/pgsql-9.5/bin/pg_config"
+  args: 
+    chdir: "{{ putit_core_service_dir }}"
   become: true
   become_user: "{{ deployer_app_user }}"
 
@@ -139,7 +146,7 @@
     group: root
     state: link
   with_items: 
-    - rails 
+#    - rails 
     - bundle
   become: true
 
