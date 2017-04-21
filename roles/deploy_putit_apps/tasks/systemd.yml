@@ -1,0 +1,90 @@
+---
+# MAKE SEPRATE TASK FOR SYSTEMD ONLY AND INCLUDE IN MAIN
+
+- name: Register app PATH var
+  shell: "egrep '[P]ATH=' /home/{{ deployer_app_user }}/.bash_profile | cut -d '=' -f2 | sed 's,$HOME,~,'g | sed -e 's,$PATH,{{ ansible_env.PATH }},'"
+  #shell: "egrep '[P]ATH=' /home/{{ deployer_app_user }}/.bash_profile | cut -d '=' -f2"
+  #shell: "export | egrep '[P]ATH'  | cut -d '\"' -f2"
+  #shell: "echo $PATH"
+  register: deployer_app_user_path_registered
+  become: true
+  become_user: "{{ deployer_app_user }}"
+  changed_when: false
+
+- name: Set PATH fact
+  set_fact:
+    deployer_app_user_path: "{{ deployer_app_user_path_registered.stdout }}"
+
+- name: Create app dir for core 
+  file: 
+    dest: "{{ putit_core_deploy_dir }}"
+    mode: 0755 
+    owner: "{{ deployer_app_user }}"
+    group: "{{ deployer_app_group }}"
+    state: directory 
+
+- name: Create app dir for auth
+  file: 
+    dest: "{{ putit_auth_deploy_dir }}"
+    mode: 0755 
+    owner: "{{ deployer_app_user }}"
+    group: "{{ deployer_app_group }}"
+    state: directory 
+
+- name: Upload scripts to server 
+  copy: 
+    src: "{{ item }}"
+    dest: '/usr/local/bin'
+    owner: "{{ deployer_app_user }}"
+    group: "{{ deployer_app_group }}"
+    mode: 0750
+  with_items: 
+    - clone_auth.sh     
+    - clone_deployer.sh
+  become: true
+
+
+- name: Upload EnvironmentFile
+  template: 
+    src: "templates/{{ putit_core_systemd_environment_file }}.j2"
+    dest: "/home/{{ deployer_app_user }}/{{ putit_core_systemd_environment_file }}"
+    owner: "{{ deployer_app_user }}"
+    group: "{{ deployer_app_group }}"
+    
+- name: Upload system service for putit-core
+  template:
+    src: templates/putit-core.service.j2
+    dest: /usr/lib/systemd/system/putit-core.service
+    owner: root
+    group: root
+    mode: 0755
+  notify:
+    - reload systemd units
+
+- name: Upload system service for putit-auth
+  copy:
+    src: files/putit-auth.service
+    dest: /usr/lib/systemd/system/putit-auth.service
+    owner: root
+    group: root
+    mode: 0755
+  notify:
+    - reload systemd units
+
+- name: Create symlink for runRESTTests.sh 
+  file: 
+    src: "{{ putit_core_deploy_dir }}/rest_tests/runRESTTests.sh"
+    dest: '/usr/local/bin/runRESTTests.sh'
+    state: link
+  become: true 
+
+
+- name: Create source dir for REST tests
+  file:  
+    dest: "{{ putit_artifacts_source_dir }}"
+    mode: 0755
+    owner: "{{ deployer_app_user }}"
+    group: "{{ deployer_app_group }}"
+    state: directory
+  become: true
+
