@@ -1,0 +1,14 @@
+putit_cli_dir: '/vagrant/deployer-services/cli'
+putit_auth_service_dir: '/vagrant/deployer-auth'
+putit_core_service_dir: '/vagrant/deployer-services/services/playbook'
+deployer_app_user: 'depapp'
+deployer_app_group: 'depapp'
+putit_core_deploy_branch: 'master'
+putit_auth_deploy_branch: 'master'
+putit_core_deploy_dir: '/vagrant/deployer-services'
+putit_auth_deploy_dir: '/vagrant/deployer-auth'
+putit_artifacts_source_dir: '/opt/source'
+putit_core_systemd_environment_file: 'putit_core_systemd_environment_file.env'
+putit_core_pid_path: "{{putit_core_service_dir}}/pids/thin-devel.pid"
+putit_core_thin_config_path: "{{putit_core_service_dir}}/config/thin-devel.yml"
+jq_version: '1.5'

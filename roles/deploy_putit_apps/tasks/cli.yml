@@ -1,0 +1,18 @@
+- name: CLI config file 
+  template: 
+    src: templates/.putitrc
+    dest: "/home/{{ deployer_app_user }}"
+    owner: "{{ deployer_app_user }}"
+    group: "{{ deployer_app_group }}"
+    mode: 0644 
+
+- name: Create tmp dir
+  file: 
+    dest: "/home/{{ deployer_app_user }}/.putit/tmp"
+    owner: "{{ deployer_app_user }}"
+    group: "{{ deployer_app_group }}"
+    recurse: yes
+    mode: 0755 
+    state: directory
+
+

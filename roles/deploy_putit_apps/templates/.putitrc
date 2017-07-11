@@ -1,0 +1,9 @@
+[general]
+putit_core_hostname=localhost
+putit_core_port=9292
+putit_auth_hostname=localhost
+putit_auth_port=9999
+putit_cli_work_dir='~/.putit/tmp'
+putit_cli_install_dir='/vagrant/deployer-services/cli'
+putit_cli_home_dir='~'
+

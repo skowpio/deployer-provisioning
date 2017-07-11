@@ -1,0 +1,6 @@
+- name: Fix coffe-script 
+  lineinfile:
+    dest: "{{ putit_auth_service_dir }}/Gemfile"
+    #state: absent
+    regexp: "^gem 'coffee-rails'"
+    line: "#gem 'coffee-rails' , '~> 4.2\'"

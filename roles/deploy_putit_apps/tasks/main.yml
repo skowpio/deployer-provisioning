@@ -76,35 +76,14 @@
   notify:
     - reload systemd units
 
-- name: Clone putit-core
-  git:
-    repo: "git@github.com:skowpio/deployer-services.git"
-    dest: "{{ putit_core_deploy_dir }}"
-    key_file: "/home/{{ deployer_app_user }}/.ssh/id_rsa"
-    clone: yes
-    force: yes
-    version: "{{ putit_core_deploy_branch }}"
-    accept_hostkey: true
-  become: true
-  become_user: "{{ deployer_app_user }}"
-
-- name: Clone putit-auth
-  git:
-    repo: "git@github.com:skowpio/deployer-auth.git"
-    dest: "{{ putit_auth_deploy_dir }}"
-    key_file: "/home/{{ deployer_app_user }}/.ssh/id_rsa"
-    clone: yes
-    force: yes
-    version: "{{ putit_auth_deploy_branch }}"
-    accept_hostkey: true
-  become: true
-  become_user: "{{ deployer_app_user }}"
+- include: clone.yml 
 
 - name: Create symlink for runRESTTests.sh 
   file: 
     src: "{{ putit_core_deploy_dir }}/rest_tests/runRESTTests.sh"
     dest: '/usr/local/bin/runRESTTests.sh'
     state: link
+    force: yes
   become: true 
 
 - name: Configure bundle 
@@ -159,3 +138,6 @@
     state: directory
   become: true
 
+- include: cli.yml
+
+- include: rails_coffe_js_fix.yml 
