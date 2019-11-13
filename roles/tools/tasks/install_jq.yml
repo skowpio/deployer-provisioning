@@ -1,0 +1,14 @@
+- name: Check jq is installed
+  stat:
+    path: /usr/local/bin/jq
+  register: is_jq
+
+- name: Install jq for parsing aws output
+  get_url:
+    url: https://github.com/stedolan/jq/releases/download/jq-{{ jq_version }}/jq-linux64
+    dest: /usr/local/bin/jq
+    mode: 0755
+    owner: root
+    group: root
+  become: true
+  when: "not {{ is_jq.stat.exists }}"

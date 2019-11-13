@@ -1,83 +1,24 @@
-- name: Check jq is installed 
-  stat: 
-    path: /usr/local/bin/jq
-  register: is_jq
+- include: install_jq.yml
+  tags: install_jq
 
-- name: Install jq for parsing aws output
-  get_url:
-    url: https://github.com/stedolan/jq/releases/download/jq-{{ jq_version }}/jq-linux64
-    dest: /usr/local/bin/jq
-    mode: 0755
-    owner: root
-    group: root
-  become: true
-  when: "not {{ is_jq.stat.exists }}"
+- include: install_jo.yml
+  tags: install_jo
 
-- name: Check jo is installed 
-  stat: 
-    path: /usr/local/bin/jo
-  register: is_jo
+- include: install_ansible.yml
+  tags: install_ansible
 
-- name: Clone jo repo tool
-  git:
-    repo: 'git://github.com/jpmens/jo.git'
-    dest: /usr/src/jo
-    clone: yes
-    update: yes
-  when: "not {{ is_jo.stat.exists }}"
+- include: install_bats.yml
+  tags: install_bats
 
-- name: Compile jo 
-  shell: |
-    autoreconf -i
-    ./configure
-    make check
-    make install
-  args: 
-    chdir: /usr/src/jo
-  become: true
-  when: "not {{ is_jo.stat.exists }}"
+# dont know if we need it
+#- name: Register all postgresql binaries 
+#  shell: "ls /usr/pgsql-{{ postgresql_major_version }}/bin"
+#  register: registered_postgresql_tools
 
-- name: Check bats is installed 
-  stat: 
-    path: /usr/local/bin/bats
-  register: is_bats
-
-- name: Clone bats repo tool
-  git:
-    repo: 'https://github.com/sstephenson/bats.git'
-    dest: /usr/src/bats
-    clone: yes
-    update: yes
-    force: yes
-  when: "not {{ is_bats.stat.exists }}"
-
-- name: Compile bats
-  shell: ./install.sh /usr/local
-  args: 
-    chdir: /usr/src/bats
-  become: true
-  when: "not {{ is_bats.stat.exists }}"
-
-- name: Register all postgresql binaries 
-  shell: "ls /usr/pgsql-{{ postgresql_major_version }}/bin"
-  register: registered_postgresql_tools
-
-
-
-- name: Link postgresql pg_config - ansible path limitation
-  file: 
-    src:  "/usr/pgsql-{{ postgresql_major_version }}/bin/pg_config"
-    dest: "/bin/pg_config"
-    owner: root
-    group: root
-    state: link
-
-
-#- name: Link postgresql bin - ansible path limitation
+#- name: Link postgresql pg_config - ansible path limitation
 #  file: 
-#    src:  "/usr/pgsql-{{ postgresql_major_version }}/bin/{{item}}"
-#    dest: "/usr/local/bin/{{item}}"
+#    src:  "/usr/pgsql-{{ postgresql_major_version }}/bin/pg_config"
+#    dest: "/bin/pg_config"
 #    owner: root
 #    group: root
 #    state: link
-#  with_items: "{{ registered_postgresql_tools.stdout.splitlines()}}"

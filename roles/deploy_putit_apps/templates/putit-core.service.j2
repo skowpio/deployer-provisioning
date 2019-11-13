@@ -3,7 +3,7 @@ Requires=network.target
 
 [Service]
 Type=forking
-User=depapp
+User={{ deployer_app_user }}
 WorkingDirectory={{ putit_core_service_dir }}
 Environment=PORT=%i
 Environment=RACK_ENV=development

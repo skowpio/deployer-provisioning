@@ -3,6 +3,9 @@
   stat: path={{ epel_repofile_path }}
   register: epel_repofile_result
 
+- debug:
+    msg: "{{ epel_repofile_result }}"
+
 - name: Install EPEL repo.
   yum:
     name: "{{ epel_repo_url }}"
@@ -11,6 +14,7 @@
   until: '"failed" not in result'
   retries: 5
   delay: 10
+  become: true
   when: not epel_repofile_result.stat.exists
 
 - name: Import EPEL GPG key.
@@ -18,40 +22,19 @@
     key: "{{ epel_repo_gpg_key_url }}"
     state: present
   when: not epel_repofile_result.stat.exists
+  become: true
   ignore_errors: "{{ ansible_check_mode }}"
 
-- name: Add PostgreSQL repository
-  yum_repository:
-    name: 'PostgreSQL9.5'
-    description: PostgreSQL 9.5 $releasever - $basearch
-    baseurl: https://download.postgresql.org/pub/repos/yum/9.5/redhat/rhel-$releasever-$basearch 
-    enabled: yes
-    gpgcheck: yes
-  become: true
-
-- rpm_key:
-    state: present
-    key: https://apt.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-95
-  become: true
-
-# keep each mupdf custom rpm version 
-#- name: Update /etc/yum.conf 
-#  ini_file: dest={{yum.config.file}}
-#            section={{item.section}}
-#            option={{item.option}}
-#            value={{item.value}}
-#  with_items:
-#      - { section: main, option: installonlypkgs, value: "{{ yum.main.installonlypkgs }}" }
-#  when: yum.main.installonlypkgs is defined 
-
 - name: Install basic packages 
-  yum: state=present name="{{ item }}"
-  with_items:   "{{ base_rpms }}"
+  yum: 
+    state: present 
+    name: "{{ base_rpms }}"
   become: true
 
 - name: Install additionals rpms 
-  yum: state=present name="{{ item }}"
-  with_items:   "{{ additionals_rpms }}"
+  yum: 
+    state: present 
+    name: "{{ additionals_rpms }}"
   become: true
   when: additionals_rpms is defined
 
@@ -59,15 +42,17 @@
   service:
     name: firewalld
     enabled: no
+  become: true
 
 - name: Stop firewalld 
   service: 
     name: firewalld 
     state: stopped
+  become: true
  
 - name: Setup motd 
   copy: 
-    src: motd
+    src: files/motd
     dest: /etc/motd
     owner: root
     group: root

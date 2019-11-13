@@ -1,0 +1,61 @@
+---
+- name: Check if SElinux is enabled
+  command: getenforce
+  register: sestatus
+  become: true
+  changed_when: false
+
+- name: Install pip and venv via yum
+  yum:
+    name: ['python-pip', 'python-virtualenv']
+    state: latest
+  become: true
+
+- name: Create ansible venv install dir ({{ ansible_tools_install_dir }}) 
+  file:
+    path: "{{ ansible_tools_install_dir }}"
+    owner: "{{ putit_build_agent_user }}"
+    group: "{{ putit_build_agent_user }}"
+    mode: '0755'
+    state: directory
+  become: true
+  become_method: sudo 
+  become_user: "{{ putit_build_agent_user }}"
+
+- name: Install virtualenv via pip
+  pip:
+    name: virtualenv
+    extra_args: --user
+  become: true
+  become_method: sudo 
+  become_user: "{{ putit_build_agent_user }}"
+
+- name: Create virtualenv for ansible
+  pip:
+    virtualenv: "{{ ansible_tools_install_dir }}"
+    name: "{{ virtual_env_libs_list }}"
+    virtualenv_python: python2.7
+  become: true
+  become_method: sudo 
+  become_user: "{{ putit_build_agent_user }}"
+
+- name: Add venv activate to the .bash_profile
+  lineinfile: 
+    path: "/home/{{ putit_build_agent_user }}/.bash_profile"
+    insertafter: EOF
+    line: "source {{ ansible_tools_install_dir }}/bin/activate"
+    create: no
+  become: true
+  become_method: sudo 
+  become_user: "{{ putit_build_agent_user }}"
+
+# https://github.com/tonyskidmore/ansible-molecule-demo/wiki/Aborting,-target-uses-selinux-but-python-bindings-(libselinux-python)-aren't-installed!
+# for sure for python2.7 check for 3.X 
+- name: Make symllink for SElinux bug
+  file:
+    src: /usr/lib64/python2.7/site-packages/selinux
+    dest:  "{{ ansible_tools_install_dir }}/ansible/venv/lib64/python2.7/site-packages/selinux"
+    state: link
+  become: true
+  when: '"Enabled" in sestatus.stdout'
+

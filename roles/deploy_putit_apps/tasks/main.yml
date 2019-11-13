@@ -41,9 +41,9 @@
     - clone_deployer.sh
   become: true
 
-- name: Upload private key for depapp user
+- name: Upload private key for  user
   copy: 
-    src: files/ssh_prv_keys/depapp_rsa.prv
+    src: "files/ssh_prv_keys/{{ deployer_app_user }}_rsa.prv"
     dest: "/home/{{ deployer_app_user }}/.ssh/id_rsa"
     owner: "{{ deployer_app_user }}"
     group: "{{ deployer_app_group }}"
@@ -67,8 +67,8 @@
     - reload systemd units
 
 - name: Upload system service for putit-auth
-  copy:
-    src: files/putit-auth.service
+  template:
+    src: templates/putit-auth.service.j2
     dest: /usr/lib/systemd/system/putit-auth.service
     owner: root
     group: root

@@ -1,0 +1,20 @@
+- name: Check bats is installed  
+  stat:  
+    path: /usr/local/bin/bats 
+  register: is_bats 
+ 
+- name: Clone bats repo tool 
+  git: 
+    repo: 'https://github.com/sstephenson/bats.git' 
+    dest: /usr/src/bats 
+    clone: yes 
+    update: yes 
+    force: yes 
+  when: "not {{ is_bats.stat.exists }}" 
+ 
+- name: Compile bats 
+  shell: ./install.sh /usr/local 
+  args:  
+    chdir: /usr/src/bats 
+  become: true 
+  when: "not {{ is_bats.stat.exists }}" 

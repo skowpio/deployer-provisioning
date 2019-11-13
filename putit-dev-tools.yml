@@ -1,9 +1,9 @@
 - hosts: all
   roles:
 #    - role: base_setup
-#    - role: tools
 #    - role: ntp 
 #    - role: app_users
 #    - role: ruby
 #    - role: etcd
+#    - role: tools
     - role: deploy_putit_apps

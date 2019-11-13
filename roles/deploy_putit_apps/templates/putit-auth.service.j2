@@ -2,7 +2,7 @@
 Requires=network.target
 
 [Service]
-User=depapp
+User={{ deployer_app_user }}
 WorkingDirectory=/vagrant/deployer-auth
 Environment=PORT=%i
 Environment=RACK_ENV=development
