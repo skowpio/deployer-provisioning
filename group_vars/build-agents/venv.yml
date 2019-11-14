@@ -1,6 +1,8 @@
 putit_ansible_version: '2.8.6'
+putit_docs_venv_install_dir: "/home/{{ putit_build_agent_user }}/.venv/putit_docs"
 ansible_tools_install_dir: "/home/{{ putit_build_agent_user }}/.venv/ansible_{{ putit_ansible_version }}"
-virtual_env_libs_list:
+putit_docs_repo: 'git@github.com:skowpio/putit-docs.git'
+putit_ansible_virtual_env_libs_list:
   - boto3==1.9.183
   - botocore==1.12.183
   - boto==2.49.0

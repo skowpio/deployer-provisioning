@@ -4,11 +4,12 @@
 - include: install_jo.yml
   tags: install_jo
 
-- include: install_ansible.yml
-  tags: install_ansible
+- include: install_venvs.yml
+  tags: install_venvs
 
-- include: install_bats.yml
-  tags: install_bats
+# now from rpm
+#- include: install_bats.yml
+#  tags: install_bats
 
 # dont know if we need it
 #- name: Register all postgresql binaries 

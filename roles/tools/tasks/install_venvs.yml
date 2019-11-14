@@ -33,7 +33,40 @@
 - name: Create virtualenv for ansible
   pip:
     virtualenv: "{{ ansible_tools_install_dir }}"
-    name: "{{ virtual_env_libs_list }}"
+    name: "{{ putit_ansible_virtual_env_libs_list }}"
+    virtualenv_python: python2.7
+  become: true
+  become_method: sudo 
+  become_user: "{{ putit_build_agent_user }}"
+
+- name: Set this venv for ansible as current ({{ ansible_tools_install_dir }})
+  file:
+    dest: "/home/{{ putit_build_agent_user }}/.venv/ansible_current"
+    src: "{{ ansible_tools_install_dir }}"
+    state: link
+    owner: "{{ putit_build_agent_user }}"
+    group: "{{ putit_build_agent_user }}"
+  become: true
+  become_method: sudo 
+  become_user: "{{ putit_build_agent_user }}"
+
+- name: Clone putit-docs to get requirements.txt
+  git:
+    repo: "{{ putit_docs_repo }}"
+    dest: "/home/{{ putit_build_agent_user }}/putit-docs" 
+    key_file: "/home/{{ putit_build_agent_user }}/.ssh/id_rsa"
+    clone: yes
+    force: yes
+    version: 'master'
+    accept_hostkey: true
+  become: true
+  become_method: sudo 
+  become_user: "{{ putit_build_agent_user }}"
+
+- name: Create virtualenv for putit-docs builds
+  pip:
+    virtualenv: "{{ putit_docs_venv_install_dir }}"
+    requirements: "/home/{{ putit_build_agent_user }}/putit-docs/requirements.txt"
     virtualenv_python: python2.7
   become: true
   become_method: sudo 

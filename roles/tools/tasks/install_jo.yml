@@ -10,6 +10,7 @@
     clone: yes
     update: yes
   when: "not {{ is_jo.stat.exists }}"
+  become: true
 
 - name: Compile jo
   shell: |

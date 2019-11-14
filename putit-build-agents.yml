@@ -4,7 +4,8 @@
       tags: base_setup
     - role: ntp
       tags: ntp
-#    - role: app_users
+    - role: users
+      tags: users
 #    - role: ruby
     - role: tools
       tags: tools

@@ -1,0 +1,8 @@
+# vim:ft=ansible:
+---
+- set_fact: os_date="{{lookup('pipe','date +%Y%m%d%H%M%S')}}"
+ 
+- include: ssh_keys.yml 
+
+- include: sudoers.yml 
+  tags: [sudoers]

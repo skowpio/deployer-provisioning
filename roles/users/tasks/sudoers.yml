@@ -1,0 +1,33 @@
+# vim:ft=ansible:
+---
+- name: Add sudo entries to the sudoers file per user - without pass
+  lineinfile:
+    path: "/etc/sudoers.d/users"
+    insertafter: EOF
+    line: "{{ item.name }}    ALL=(ALL)   NOPASSWD: ALL"
+    create: yes
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - "{{ ssh_users }}"
+  when: item.sudoers is defined and item.sudoers.all is defined and item.sudoers.all == true and item.sudoers.password_less == true
+  become: true
+
+- name: Add sudo entries to the sudoers file per user - with pass
+  blockinfile:
+    path: "/etc/sudoers.d/users"
+    insertafter: EOF
+    block: | 
+      {{ item.name }}    ALL=(ALL)    ALL
+      Defaults:{{ item.name }} !rootpw
+    marker: "## {mark} {{ item.name }} ##"
+    create: yes
+    owner: root
+    group: root
+    mode: 0640
+  with_items:
+    - "{{ ssh_users }}"
+  when: item.sudoers is defined and item.sudoers.all is defined and item.sudoers.all == true and not item.sudoers.password_less
+  become: true
+

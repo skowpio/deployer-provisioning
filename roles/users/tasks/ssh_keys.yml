@@ -1,0 +1,203 @@
+# vim:ft=ansible:
+---
+  - name: Create work dir for this role
+    file: 
+      path: '/tmp/.ansible_work' 
+      state: directory 
+      mode: 0755
+    tags: [ssh_keys, add_user]
+
+  - name: Set ansible_work var
+    set_fact: 
+      ansible_work_dir: '/tmp/.ansible_work'
+    become: true
+    tags: [ssh_keys, add_user]
+
+  - name: Create temp dir per user 
+    file: 
+      path: "{{ ansible_work_dir  }}/{{ item.name }}" 
+      state: directory 
+      mode: 0700
+    with_items:
+      - "{{ ssh_users }}"
+    become: true
+    tags: [ssh_keys, add_user]
+
+  - name: Create user primary group
+    group: 
+      name: "{{ item.group | default(item.name) }}"
+      state: present
+    with_items:
+        - "{{ ssh_users }}"
+    become: true
+    tags: [ssh_keys, add_user]
+
+  - name: Create other user groups
+    group: 
+      name: "{{ item.1 }}"
+      state: present
+    with_subelements:
+        - "{{ ssh_users }}"
+        - groups
+        - skip_missing: yes
+    become: true
+    tags: [ssh_keys, add_user, add_groups]
+    when: item.1 is defined 
+
+# there is a chance that other role created user home dir 
+  - name: Check if user home dir exists 
+    stat: 
+      path: "/home/{{ item.name }}"
+    with_items:
+        - "{{ ssh_users }}"
+    become: true
+    register: home_dir_check
+    tags: [ssh_keys, add_user]
+
+  - debug: 
+      msg: "{{home_dir_check.results}}"
+
+  - name: Adding users - with password 
+    user: 
+      user: "{{ item.name }}" 
+      password: "{{ default_password }}"
+      update_password: "{{ update_password | default('on_create') }}"
+      createhome: yes 
+      groups: "{{ item.groups | default('') }}" 
+      group: "{{ item.group | default(item.name) }}"
+    with_items:
+        - "{{ ssh_users }}"
+    become: true
+    tags: [ssh_keys, add_user, change_password, add_groups]
+    when: item.set_password is defined or ( item.sudoers is defined and not item.sudoers.password_less )
+
+  - name: Adding users - without password 
+    user: 
+      user: "{{ item.name }}" 
+      createhome: yes 
+      groups: "{{ item.groups | default('') }}" 
+      group: "{{ item.group | default(item.name) }}"
+    with_items:
+        - "{{ ssh_users }}"
+    become: true
+    tags: [ssh_keys, add_user, add_groups]
+    when: > 
+          ( item.set_password is not defined and item.sudoers is not defined ) 
+          or ( item.set_password is not defined and item.sudoers.password_less == true )
+
+# restore setlinux context for home dir - only for the first run - if owner is not user name
+  - name: Restoring selinux contex for each home directory 
+    shell: restorecon -R /home/{{ item.item.name }}
+    with_items:
+        - "{{ home_dir_check.results }}"
+    become: true
+    when: item.stat.exists and item.stat.pw_name != item.item.name
+    tags: [ssh_keys, add_user]
+
+# fix home dir owner for dir perms  
+  - name: Set proper perms for user home dir exists
+    file: 
+      path: "/home/{{ item.item.name }}" 
+      state: directory 
+      mode: 0700 
+      owner: "{{ item.item.name }}" 
+      group: "{{ item.item.group | default(item.item.name) }}"
+    with_items:
+        - "{{ home_dir_check.results }}"
+    become: true
+    when: item.stat.exists 
+    tags: [ssh_keys, add_user]
+
+  - name: Make sure that .ssh exist 
+    file: 
+      path: "/home/{{ item.name }}/.ssh" 
+      state: directory 
+      mode: 0700 
+      owner: "{{ item.name }}" 
+      group: "{{ item.group | default(item.name) }}"
+    with_items:
+      - "{{ ssh_users }}" 
+    become: true
+    tags: [ssh_keys, add_user]
+
+  - name: Adding ssh_key to temp file  
+    authorized_key: 
+      user: "{{ item.0.name }}" 
+      key: "{{ lookup('file', item.1) }}" 
+      path: "{{ ansible_work_dir }}/{{ item.0.name }}/authorized_keys"
+    with_subelements:
+       - "{{ ssh_users }}"
+       - ssh_keys
+    become: true
+    tags: [ssh_keys, add_user]
+
+  - name: Check if authorized_key exisit 
+    stat: 
+      path: "/home/{{ item.name }}/.ssh/authorized_keys"
+    with_items:
+        - "{{ ssh_users }}"
+    become: true
+    register: authorized_keys_check
+    tags: [ssh_keys, add_user]
+
+  # iterating only across authorized_keys_check.results to backups files that exists
+  - name: Backuping authorized_key 
+    shell: /bin/cp -f /home/{{ item.item.name }}/.ssh/authorized_keys /home/{{ item.item.name }}/.ssh/authorized_keys_{{os_date}}
+    with_items:
+        - "{{ authorized_keys_check.results }}"
+    become: true
+    when: item.stat.exists 
+    tags: [ssh_keys, add_user]
+
+  - name: Copying current temp authorized_key to user home
+    shell: /bin/cp -f {{ ansible_work_dir }}/{{ item.name }}/authorized_keys /home/{{ item.name }}/.ssh/authorized_keys
+    with_items:
+        - "{{ ssh_users }}"
+    become: true
+    tags: [ssh_keys, add_user]
+
+  - name: Setting perms for authorized_keys
+    file: 
+      path: "/home/{{ item.name }}/.ssh/authorized_keys" 
+      mode: 0600 
+      group: "{{ item.group | default(item.name) }}" 
+      owner: "{{ item.name }}" 
+    with_items:
+        - "{{ ssh_users }}"
+    become: true
+    when: not ansible_check_mode
+    tags: [ssh_keys, add_user]
+
+  - name: Upload user prv key if defined
+    copy:
+      dest: "/home/{{ item.name }}/.ssh/id_rsa"
+      src: "{{ item.ssh_prv_key }}"
+      mode: 0600
+      group: "{{ item.group | default(item.name) }}" 
+      owner: "{{ item.name }}" 
+    with_items:
+        - "{{ ssh_users }}"
+    become: true
+    become_method: sudo
+    become_user: "{{ item.name }}"
+    when: not ansible_check_mode and item.ssh_prv_key is defined
+    tags: [ssh_keys, add_user, upload_ssh_prv_key]
+
+  - name: Cleaning temp files
+    file: 
+      path: "{{ ansible_work_dir }}/{{ item.name }}/authorized_keys" 
+      state: absent
+    with_items:
+       - "{{ ssh_users }}"
+    become: true
+    tags: [ssh_keys, add_user]
+  
+  - name: Cleaning temp dir
+    file: 
+      path: "{{ ansible_work_dir }}/{{ item.name }}" 
+      state: absent
+    with_items:
+       - "{{ ssh_users }}"
+    become: true
+    tags: [ssh_keys, add_user]
+

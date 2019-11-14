@@ -1,8 +1,8 @@
 ---
 putit_build_agent_user: 'tools'
 ssh_users:
-    - name: 'tools'
-      group: 'tools' 
+    - name: 'depapp'
+      group: 'depapp' 
       groups: 
         - wheel
         - docker
@@ -10,8 +10,9 @@ ssh_users:
       sudoers:
           all: true
           password_less: true
-      ssh_prv_key: "files/ssh_keys/tools_prv_ssh_key.yml"
       ssh_keys:
         - ssh_keys/krzysztofk_rsa.pub
         - ssh_keys/mateuszw_rsa.pub
         - ssh_keys/piotrs_rsa.pub  
+        - ssh_keys/tools_rsa.pub
+        - ssh_keys/depapp_rsa.pub
